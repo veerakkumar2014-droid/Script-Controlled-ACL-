@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Script Controlled ACL</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #eef2f7;
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.12);
+        }
+
+        h1 {
+            text-align: center;
+            color: #243b7a;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 7px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 15px;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #243b7a;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 17px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #182957;
+        }
+
+        .acl-process {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f5f7fb;
+            border-radius: 10px;
+        }
+
+        .acl-process h2 {
+            color: #243b7a;
+            margin-bottom: 15px;
+        }
+
+        .step {
+            background: white;
+            padding: 12px;
+            margin: 8px 0;
+            border-left: 5px solid #243b7a;
+            border-radius: 5px;
+        }
+
+        #result {
+            display: none;
+            margin-top: 25px;
+            padding: 22px;
+            border-radius: 10px;
+        }
+
+        .allowed {
+            background: #e7f7ed;
+            border: 2px solid #2e8b57;
+        }
+
+        .denied {
+            background: #fdeaea;
+            border: 2px solid #d33;
+        }
+
+        #result h2 {
+            margin-bottom: 15px;
+        }
+
+        .result-item {
+            padding: 10px 0;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 7px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        .allow-status {
+            background: #2e8b57;
+            color: white;
+        }
+
+        .deny-status {
+            background: #d33;
+            color: white;
+        }
+
+        .record {
+            margin-top: 25px;
+            padding: 20px;
+            background: #fafafa;
+            border-radius: 10px;
+        }
+
+        .record h3 {
+            color: #243b7a;
+            margin-bottom: 12px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Script-Controlled ACL</h1>
+
+    <p class="subtitle">
+        Restrict Record Access Based on Field Value
+    </p>
+
+    <!-- USER DETAILS -->
+
+    <div class="form-group">
+        <label>User Name</label>
+        <input type="text" id="userName"
+               placeholder="Enter user name">
+    </div>
+
+    <div class="form-group">
+        <label>User Role</label>
+
+        <select id="userRole">
+            <option value="">Select Role</option>
+            <option value="admin">Admin</option>
+            <option value="manager">Manager</option>
+            <option value="employee">Employee</option>
+            <option value="guest">Guest</option>
+        </select>
+    </div>
+
+    <!-- RECORD FIELD -->
+
+    <div class="form-group">
+        <label>Record Department</label>
+
+        <select id="department">
+            <option value="">Select Department</option>
+            <option value="IT">IT</option>
+            <option value="HR">HR</option>
+            <option value="Finance">Finance</option>
+            <option value="Sales">Sales</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>Record Status</label>
+
+        <select id="recordStatus">
+            <option value="">Select Status</option>
+            <option value="Public">Public</option>
+            <option value="Confidential">Confidential</option>
+            <option value="Restricted">Restricted</option>
+        </select>
+    </div>
+
+    <button onclick="checkAccess()">
+        Check Record Access
+    </button>
+
+
+    <!-- ACL PROCESS -->
+
+    <div class="acl-process">
+
+        <h2>ACL Script Process</h2>
+
+        <div class="step">
+            1️⃣ User requests access to a record
+        </div>
+
+        <div class="step">
+            2️⃣ ACL reads the record field values
+        </div>
+
+        <div class="step">
+            3️⃣ Script checks user role
+        </div>
+
+        <div class="step">
+            4️⃣ Script checks department and record status
+        </div>
+
+        <div class="step">
+            5️⃣ Access is automatically Allowed or Denied
+        </div>
+
+    </div>
+
+
+    <!-- RESULT -->
+
+    <div id="result">
+
+        <h2 id="resultTitle"></h2>
+
+        <div class="result-item">
+            <strong>User:</strong>
+            <span id="resultUser"></span>
+        </div>
+
+        <div class="result-item">
+            <strong>Role:</strong>
+            <span id="resultRole"></span>
+        </div>
+
+        <div class="result-item">
+            <strong>Department:</strong>
+            <span id="resultDepartment"></span>
+        </div>
+
+        <div class="result-item">
+            <strong>Record Status:</strong>
+            <span id="resultStatus"></span>
+        </div>
+
+        <div class="result-item">
+            <strong>ACL Decision:</strong>
+            <span id="resultDecision" class="status"></span>
+        </div>
+
+        <div class="result-item">
+            <strong>Reason:</strong>
+            <span id="resultReason"></span>
+        </div>
+
+    </div>
+
+
+    <!-- RECORD -->
+
+    <div class="record">
+
+        <h3>Sample Protected Record</h3>
+
+        <p>
+            Employee Salary Information
+        </p>
+
+        <p>
+            Confidential company information
+        </p>
+
+    </div>
+
+</div>
+
+
+<script>
+
+function checkAccess() {
+
+    let userName =
+        document.getElementById("userName").value;
+
+    let role =
+        document.getElementById("userRole").value;
+
+    let department =
+        document.getElementById("department").value;
+
+    let status =
+        document.getElementById("recordStatus").value;
+
+
+    if (
+        userName === "" ||
+        role === "" ||
+        department === "" ||
+        status === ""
+    ) {
+        alert("Please fill all fields");
+        return;
+    }
+
+
+    let access = false;
+    let reason = "";
+
+
+    /*
+       ACL SCRIPT LOGIC
+    */
+
+    // ADMIN CAN ACCESS EVERYTHING
+
+    if (role === "admin") {
+
+        access = true;
+
+        reason =
+            "Admin role has permission to access the record.";
+
+    }
+
+
+    // PUBLIC RECORD
+
+    else if (status === "Public") {
+
+        access = true;
+
+        reason =
+            "The record is public and can be accessed.";
+
+    }
+
+
+    // CONFIDENTIAL RECORD
+
+    else if (status === "Confidential") {
+
+        if (role === "manager") {
+
+            access = true;
+
+            reason =
+                "Manager has permission to view confidential records.";
+
+        }
+        else {
+
+            access = false;
+
+            reason =
+                "Only Admin or Manager can access confidential records.";
+
+        }
+
+    }
+
+
+    // RESTRICTED RECORD
+
+    else if (status === "Restricted") {
+
+        if (
+            role === "manager" &&
+            department === "IT"
+        ) {
+
+            access = true;
+
+            reason =
+                "IT Manager is allowed to access restricted records.";
+
+        }
+        else {
+
+            access = false;
+
+            reason =
+                "Restricted record can only be accessed by an IT Manager.";
+
+        }
+
+    }
+
+
+    // DISPLAY RESULT
+
+    document.getElementById("resultUser").innerText =
+        userName;
+
+    document.getElementById("resultRole").innerText =
+        role;
+
+    document.getElementById("resultDepartment").innerText =
+        department;
+
+    document.getElementById("resultStatus").innerText =
+        status;
+
+    document.getElementById("resultReason").innerText =
+        reason;
+
+
+    let result =
+        document.getElementById("result");
+
+    let decision =
+        document.getElementById("resultDecision");
+
+    let title =
+        document.getElementById("resultTitle");
+
+
+    result.style.display = "block";
+
+
+    if (access === true) {
+
+        result.className = "allowed";
+
+        title.innerText =
+            "✅ Access Granted";
+
+        decision.innerText =
+            "ALLOW";
+
+        decision.className =
+            "status allow-status";
+
+    }
+
+    else {
+
+        result.className = "denied";
+
+        title.innerText =
+            "❌ Access Denied";
+
+        decision.innerText =
+            "DENY";
+
+        decision.className =
+            "status deny-status";
+
+    }
+
+}
+
+</script>
+
+</body>
+</html>
